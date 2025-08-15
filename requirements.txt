@@ -31,7 +31,7 @@ itsdangerous==2.1.2
 click==8.1.7
 
 # PostgreSQL Support for Production
-psycopg2-binary==2.9.7
+psycopg2-binary==2.9.9
 
 # Optional: Desktop GUI (uncomment if needed)
 # PyQt5==5.15.9
