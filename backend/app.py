@@ -3951,6 +3951,70 @@ def check_auth():
         print(f"[ERROR] Check auth API error: {e}")
         return jsonify({'success': False, 'message': 'เกิดข้อผิดพลาดในระบบ'}), 500
 
+@app.route('/api/init-data', methods=['POST'])
+def init_default_data():
+    """เพิ่มข้อมูลเริ่มต้นลงในฐานข้อมูล"""
+    try:
+        # ตรวจสอบว่ามีข้อมูลอยู่แล้วหรือไม่
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        
+        # ตรวจสอบจำนวนหมวดหมู่
+        cursor.execute("SELECT COUNT(*) FROM menu_categories")
+        category_count = cursor.fetchone()[0]
+        
+        # ตรวจสอบจำนวนเมนู
+        cursor.execute("SELECT COUNT(*) FROM menu_items")
+        menu_count = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        # ถ้ามีข้อมูลอยู่แล้ว ให้แจ้งเตือน
+        if category_count > 0 or menu_count > 0:
+            return jsonify({
+                'success': False,
+                'message': f'ระบบมีข้อมูลอยู่แล้ว (หมวดหมู่: {category_count}, เมนู: {menu_count})',
+                'data': {
+                    'categories': category_count,
+                    'menu_items': menu_count
+                }
+            }), 400
+        
+        # เพิ่มข้อมูลเริ่มต้น
+        db.init_default_data()
+        
+        # ตรวจสอบผลลัพธ์
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM menu_categories")
+        new_category_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM menu_items")
+        new_menu_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM tables")
+        table_count = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'เพิ่มข้อมูลเริ่มต้นสำเร็จ!',
+            'data': {
+                'categories': new_category_count,
+                'menu_items': new_menu_count,
+                'tables': table_count
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"[ERROR] Init data API error: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'เกิดข้อผิดพลาด: {str(e)}'
+        }), 500
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint สำหรับ monitoring"""
