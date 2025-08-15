@@ -7,7 +7,7 @@ Flask-CORS==4.0.0
 
 # QR Code Generation
 qrcode[pil]==7.4.2
-Pillow==10.0.1
+Pillow==10.4.0
 
 # Google Sheets Integration
 google-api-python-client==2.103.0
