@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: food-pos-system
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHONPATH
+        value: /opt/render/project/src/backend
+      - key: PORT
+        value: 10000
+    healthCheckPath: /
+    autoDeploy: true
+    region: oregon
+    branch: main
+    rootDir: .
+    runtime: python-3.11
