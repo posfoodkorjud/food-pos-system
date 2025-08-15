@@ -1927,7 +1927,7 @@ async function confirmAddMenuItem(menuId, menuName, price) {
         };
         
         // ส่งข้อมูลไปยัง API
-        const response = await fetch('http://localhost:5000/api/orders', {
+        const response = await fetch('/api/orders', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2043,7 +2043,7 @@ async function saveMenuChanges(tableId) {
         
         console.log('Saving menu changes:', updateData);
         
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/update-orders`, {
+        const response = await fetch(`/api/tables/${tableId}/update-orders`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2057,7 +2057,7 @@ async function saveMenuChanges(tableId) {
             showAlert('บันทึกการเปลี่ยนแปลงเรียบร้อยแล้ว', 'success');
             
             // อัปเดตข้อมูลโต๊ะเฉพาะโต๊ะที่แก้ไขเพื่อให้ได้ session_id ใหม่
-            const tableResponse = await fetch(`http://localhost:5000/api/tables/${tableId}`);
+            const tableResponse = await fetch(`/api/tables/${tableId}`);
             const tableData = await tableResponse.json();
             
             if (tableData.success) {
@@ -2180,7 +2180,7 @@ async function checkoutTable(tableId) {
                 try {
                     for (const order of data.data.orders) {
                         if (order.order_id) {
-                            const billStatusResponse = await fetch(`http://localhost:5000/api/orders/${order.order_id}/bill-status`, {
+                            const billStatusResponse = await fetch(`/api/orders/${order.order_id}/bill-status`, {
                                 method: 'PUT',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -2344,7 +2344,7 @@ async function printReceipt(identifier, isReprint = false) {
             
             // ลองดึงข้อมูลจาก API checkout ก่อน
             try {
-                const checkoutResponse = await fetch(`http://localhost:5000/api/tables/${tableId}/checkout`, {
+                const checkoutResponse = await fetch(`/api/tables/${tableId}/checkout`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -2398,7 +2398,7 @@ async function printReceipt(identifier, isReprint = false) {
             }
             
             // ดึงข้อมูลโต๊ะและออเดอร์
-            const response = await fetch(`http://localhost:5000/api/tables/${tableId}/orders?session_id=${session_id}`);
+            const response = await fetch(`/api/tables/${tableId}/orders?session_id=${session_id}`);
             const data = await response.json();
             console.log('Orders API response:', data);
             
@@ -2901,7 +2901,7 @@ async function clearTable(tableId) {
         const oldSessionId = table ? table.session_id : null;
         console.log(`[DEBUG] clearTable: Clearing table ${tableId} with session_id: ${oldSessionId}`);
         
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/clear`, {
+        const response = await fetch(`/api/tables/${tableId}/clear`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -2985,7 +2985,7 @@ async function clearTable() {
     try {
         showLoading(true);
         
-        const response = await fetch(`http://localhost:5000/api/tables/${selectedTableId}/clear`, {
+        const response = await fetch(`/api/tables/${selectedTableId}/clear`, {
             method: 'POST'
         });
         
@@ -3046,7 +3046,7 @@ async function refreshTables() {
 // Menu Management
 async function loadMenuCategories() {
     try {
-        const response = await fetch('http://localhost:5000/api/menu/categories');
+        const response = await fetch('/api/menu/categories');
         const data = await response.json();
         
         // API ส่งข้อมูลเป็น array โดยตรง
@@ -3407,7 +3407,7 @@ async function addCategory() {
     try {
         showLoading(true);
         
-        const response = await fetch('http://localhost:5000/api/menu/categories', {
+        const response = await fetch('/api/menu/categories', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -3474,7 +3474,7 @@ async function addMenuItem() {
     try {
         showLoading(true);
         
-        const response = await fetch('http://localhost:5000/api/menu/items', {
+        const response = await fetch('/api/menu/items', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -3525,7 +3525,7 @@ function refreshMenu() {
 async function loadOrders() {
     try {
         console.log('Loading orders...');
-        const response = await fetch('http://localhost:5000/api/orders');
+        const response = await fetch('/api/orders');
         console.log('Response status:', response.status);
         console.log('Response headers:', response.headers);
         
@@ -3856,7 +3856,7 @@ async function acceptSingleOrder(orderId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}/accept`, {
+        const response = await fetch(`/api/orders/${orderId}/accept`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -3880,7 +3880,7 @@ async function completeSingleOrder(orderId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}/complete`, {
+        const response = await fetch(`/api/orders/${orderId}/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -3912,7 +3912,7 @@ async function reprintTableReceipt(tableId) {
         // ใช้ออเดอร์ล่าสุด
         const latestOrder = tableOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
         
-        const response = await fetch(`http://localhost:5000/api/orders/${latestOrder.order_id}`);
+        const response = await fetch(`/api/orders/${latestOrder.order_id}`);
         const data = await response.json();
         
         if (data.success) {
@@ -4029,7 +4029,7 @@ async function rejectSingleOrder(orderId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}/reject`, {
+        const response = await fetch(`/api/orders/${orderId}/reject`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -4111,7 +4111,7 @@ async function completeAllTableOrders(tableId) {
     
     try {
         for (const item of acceptedItems) {
-            await fetch(`http://localhost:5000/api/order-items/${item.order_item_id}/complete`, {
+            await fetch(`/api/order-items/${item.order_item_id}/complete`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -4132,7 +4132,7 @@ async function closeTableSession(tableId, sessionId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/close-session`, {
+        const response = await fetch(`/api/tables/${tableId}/close-session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: sessionId })
@@ -4430,7 +4430,7 @@ function refreshOrders() {
 // Order Management Functions
 async function acceptOrder(orderId) {
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}/accept`, {
+        const response = await fetch(`/api/orders/${orderId}/accept`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -4457,7 +4457,7 @@ async function rejectOrder(orderId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}/reject`, {
+        const response = await fetch(`/api/orders/${orderId}/reject`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -4480,7 +4480,7 @@ async function rejectOrder(orderId) {
 
 async function completeOrder(orderId) {
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}/complete`, {
+        const response = await fetch(`/api/orders/${orderId}/complete`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -4503,7 +4503,7 @@ async function completeOrder(orderId) {
 
 async function showOrderDetails(orderId) {
     try {
-        const response = await fetch(`http://localhost:5000/api/orders/${orderId}/items`);
+        const response = await fetch(`/api/orders/${orderId}/items`);
         const data = await response.json();
         
         if (data.success) {
@@ -4590,7 +4590,7 @@ function displayOrderDetailsModal(orderId, items) {
 
 async function acceptOrderItem(orderItemId) {
     try {
-        const response = await fetch(`http://localhost:5000/api/order-items/${orderItemId}/accept`, {
+        const response = await fetch(`/api/order-items/${orderItemId}/accept`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -4624,7 +4624,7 @@ async function rejectOrderItem(orderItemId) {
     }
     
     try {
-        const response = await fetch(`http://localhost:5000/api/order-items/${orderItemId}/reject`, {
+        const response = await fetch(`/api/order-items/${orderItemId}/reject`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -5023,7 +5023,7 @@ function setupFormHandlers() {
         }
         
         try {
-            const response = await fetch('http://localhost:5000/api/settings/promptpay', {
+            const response = await fetch('/api/settings/promptpay', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -5071,7 +5071,7 @@ function setupFormHandlers() {
         }
         
         try {
-            const response = await fetch('http://localhost:5000/api/settings/domain', {
+            const response = await fetch('/api/settings/domain', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -5128,7 +5128,7 @@ function setupFormHandlers() {
                 formData.append('credentials', credentialsFile);
             }
             
-            const response = await fetch('http://localhost:5000/api/settings/sheets', {
+            const response = await fetch('/api/settings/sheets', {
                 method: 'POST',
                 body: formData
             });
@@ -5154,7 +5154,7 @@ async function testGoogleSheets() {
     try {
         showLoading(true);
         
-        const response = await fetch('http://localhost:5000/api/settings/sheets/test', {
+        const response = await fetch('/api/settings/sheets/test', {
             method: 'POST'
         });
         
@@ -5182,7 +5182,7 @@ async function generateAllQR() {
     try {
         showLoading(true);
         
-        const response = await fetch('http://localhost:5000/api/tools/generate-qr', {
+        const response = await fetch('/api/tools/generate-qr', {
             method: 'POST'
         });
         
@@ -5342,7 +5342,7 @@ async function clearAllTables() {
     try {
         showLoading(true);
         
-        const response = await fetch('http://localhost:5000/api/tools/clear-all-tables', {
+        const response = await fetch('/api/tools/clear-all-tables', {
             method: 'POST'
         });
         
@@ -5369,7 +5369,7 @@ async function exportData() {
     try {
         showLoading(true);
         
-        const response = await fetch('http://localhost:5000/api/tools/export-data');
+        const response = await fetch('/api/tools/export-data');
         
         if (response.ok) {
             const blob = await response.blob();
@@ -5425,7 +5425,7 @@ function editCategory(categoryId) {
     if (newName && newName.trim() !== '') {
         const newDescription = prompt('คำอธิบาย:', category.description || '');
         
-        fetch(`http://localhost:5000/api/menu/categories/${categoryId}`, {
+        fetch(`/api/menu/categories/${categoryId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -5459,7 +5459,7 @@ function deleteCategory(categoryId) {
     }
     
     if (confirm(`คุณต้องการลบหมวดหมู่ "${category.name}" หรือไม่?\n\nหมายเหตุ: หากมีเมนูในหมวดหมู่นี้ จะไม่สามารถลบได้`)) {
-        fetch(`http://localhost:5000/api/menu/categories/${categoryId}`, {
+        fetch(`/api/menu/categories/${categoryId}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
@@ -5483,7 +5483,7 @@ async function moveCategoryUp(categoryId) {
     try {
         showLoading(true);
         
-        const response = await fetch(`http://localhost:5000/api/menu/categories/${categoryId}/move-up`, {
+        const response = await fetch(`/api/menu/categories/${categoryId}/move-up`, {
             method: 'POST'
         });
         
@@ -5509,7 +5509,7 @@ async function moveCategoryDown(categoryId) {
     try {
         showLoading(true);
         
-        const response = await fetch(`http://localhost:5000/api/menu/categories/${categoryId}/move-down`, {
+        const response = await fetch(`/api/menu/categories/${categoryId}/move-down`, {
             method: 'POST'
         });
         
@@ -5701,7 +5701,7 @@ function uploadMenuImage(file) {
     
     showLoading(true);
     
-    fetch('http://localhost:5000/api/upload/menu-image', {
+    fetch('/api/upload/menu-image', {
         method: 'POST',
         body: formData
     })
@@ -5756,7 +5756,7 @@ function saveMenuEdit(itemId) {
     
     console.log('DEBUG: Form data being sent:', formData);
     
-    fetch(`http://localhost:5000/api/menu/items/${itemId}`, {
+    fetch(`/api/menu/items/${itemId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -5789,7 +5789,7 @@ function deleteMenuItem(itemId) {
     }
     
     if (confirm(`คุณต้องการลบเมนู "${item.name}" หรือไม่?`)) {
-        fetch(`http://localhost:5000/api/menu/items/${itemId}`, {
+        fetch(`/api/menu/items/${itemId}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
@@ -5813,7 +5813,7 @@ async function printTableQR(tableId) {
     try {
         showLoading(true);
         
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/qr/print`);
+        const response = await fetch(`/api/tables/${tableId}/qr/print`);
         const data = await response.json();
         
         if (data.success) {
@@ -5955,7 +5955,7 @@ async function startTableSession(tableId) {
     try {
         showLoading(true);
         
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/qr`);
+        const response = await fetch(`/api/tables/${tableId}/qr`);
         const data = await response.json();
         
         if (data.success) {
@@ -6041,7 +6041,7 @@ async function confirmCloseTableSession(tableId) {
         showLoading(true);
         
         // เคลียร์โต๊ะ
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/clear`, {
+        const response = await fetch(`/api/tables/${tableId}/clear`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -6080,7 +6080,7 @@ async function showTableQR(tableId) {
     try {
         showLoading(true);
         
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/qr`);
+        const response = await fetch(`/api/tables/${tableId}/qr`);
         const data = await response.json();
         
         if (data.success) {
@@ -6163,7 +6163,7 @@ function showAddTableModal() {
     const tableName = `โต๊ะ ${nextTableId}`;
     
     // เพิ่มโต๊ะทันทีโดยไม่ต้องเปิด modal
-    fetch('http://localhost:5000/api/tables', {
+    fetch('/api/tables', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -6203,7 +6203,7 @@ function addNewTable() {
         return;
     }
     
-    fetch('http://localhost:5000/api/tables', {
+    fetch('/api/tables', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -6239,7 +6239,7 @@ function deleteTableConfirm(tableId, tableName) {
 
 // ฟังก์ชันสำหรับลบโต๊ะ
 function deleteTable(tableId) {
-    fetch(`http://localhost:5000/api/tables/${tableId}`, {
+    fetch(`/api/tables/${tableId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
@@ -6263,7 +6263,7 @@ function deleteTable(tableId) {
 // Function to show delete table modal
 function showDeleteTableModal() {
     // Load available tables for deletion
-    fetch('http://localhost:5000/api/tables')
+    fetch('/api/tables')
         .then(response => response.json())
         .then(data => {
             const select = document.getElementById('deleteTableSelect');
@@ -8210,7 +8210,7 @@ function saveOptionValues(optionType) {
 
 async function completeOrderItem(orderItemId) {
     try {
-        const response = await fetch(`http://localhost:5000/api/order-items/${orderItemId}/complete`, {
+        const response = await fetch(`/api/order-items/${orderItemId}/complete`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

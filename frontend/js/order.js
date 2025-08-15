@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sessionId = getQueryParam('session');
     if (tableId) {
         // Fetch table info from backend
-        fetch(`http://localhost:5000/api/tables`)
+        fetch(`/api/tables`)
             .then(response => response.json())
             .then(tables => {
                 const table = tables.find(t => t.id == tableId || t.table_id == tableId);
@@ -153,7 +153,7 @@ function searchMenuItems(query) {
 
 // Load tables
 function loadTables() {
-    fetch('http://localhost:5000/api/tables')
+    fetch('/api/tables')
         .then(response => response.json())
         .then(tables => {
             const tableContainer = document.getElementById('table-selection');
@@ -208,7 +208,7 @@ function selectTable(tableId, tableName, status) {
 function getCategoryNameById(categoryId) {
     console.log('getCategoryNameById called with categoryId:', categoryId);
     // ดึงข้อมูลจาก API แทนการ hardcode
-    return fetch(`http://localhost:5000/api/menu/category/${categoryId}`)
+    return fetch(`/api/menu/category/${categoryId}`)
         .then(response => response.json())
         .then(data => {
             if (data && data.length > 0) {
@@ -226,7 +226,7 @@ function getCategoryNameById(categoryId) {
 // Load categories
 function loadCategories() {
     console.log('loadCategories called');
-    fetch('http://localhost:5000/api/menu/categories')
+    fetch('/api/menu/categories')
         .then(response => response.json())
         .then(response => {
             console.log('Categories response:', response);
@@ -294,7 +294,7 @@ async function loadMenuByCategory(categoryId) {
     console.log('=== loadMenuByCategory called with categoryId:', categoryId);
     
     // ถ้า categoryId เป็น null จะโหลดสินค้าทั้งหมด
-    const url = 'http://localhost:5000/api/menu/items';
+    const url = '/api/menu/items';
     
     currentCategory = categoryId;
     
@@ -976,7 +976,7 @@ function addItemDirectlyToOrder(itemId, itemName, itemPrice, selectedOption = nu
         orderData.session_id = sessionId;
     }
     
-    fetch('http://localhost:5000/api/orders', {
+    fetch('/api/orders', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -1304,7 +1304,7 @@ function confirmOrder() {
         controller.abort();
     }, 10000); // 10 วินาที timeout
     
-    fetch('http://localhost:5000/api/orders', {
+    fetch('/api/orders', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -1398,7 +1398,7 @@ function fetchOrderStatus(tableId) {
         checkSessionStatus(tableId, sessionId);
     }
     
-    let url = `http://localhost:5000/api/tables/${tableId}/order-summary`;
+    let url = `/api/tables/${tableId}/order-summary`;
     if (sessionId) {
         url += `?session_id=${sessionId}`;
     }
@@ -1432,7 +1432,7 @@ function fetchOrderStatus(tableId) {
 
 // ฟังก์ชันตรวจสอบสถานะเซสชั่น
 function checkSessionStatus(tableId, sessionId) {
-    fetch(`http://localhost:5000/api/tables/${tableId}/session/check?session_id=${sessionId}`)
+    fetch(`/api/tables/${tableId}/session/check?session_id=${sessionId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success && !data.session_valid) {
@@ -1511,7 +1511,7 @@ function requestBill() {
         return;
     }
     
-    fetch(`http://localhost:5000/api/orders/bill/${currentTable.id}`, {
+    fetch(`/api/orders/bill/${currentTable.id}`, {
         method: 'POST'
     })
     .then(response => response.json())
@@ -1660,7 +1660,7 @@ function showOrderHistory() {
 // ดึงประวัติการสั่งอาหารของโต๊ะ
 function fetchOrderHistory(tableId) {
     const sessionId = getQueryParam('session');
-    let url = `http://localhost:5000/api/tables/${tableId}/orders`;
+    let url = `/api/tables/${tableId}/orders`;
     if (sessionId) {
         url += `?session_id=${sessionId}`;
     }
@@ -1869,7 +1869,7 @@ async function requestCheckout() {
         document.getElementById('checkBillBtn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังดำเนินการ...';
         
         // ส่งคำขอไปยัง API
-        const response = await fetch(`http://localhost:5000/api/tables/${tableId}/checkout`, {
+        const response = await fetch(`/api/tables/${tableId}/checkout`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1882,7 +1882,7 @@ async function requestCheckout() {
         if (data.success) {
             // ส่งการแจ้งเตือนไปยัง admin
             try {
-                await fetch('http://localhost:5000/api/check-bill-request', {
+                await fetch('/api/check-bill-request', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -2129,7 +2129,7 @@ function loadOrderListForWaiting() {
     
     if (!tableId) return;
     
-    let url = `http://localhost:5000/api/tables/${tableId}/order-summary`;
+    let url = `/api/tables/${tableId}/order-summary`;
     if (sessionId) {
         url += `?session_id=${sessionId}`;
     }
