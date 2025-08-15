@@ -9,7 +9,10 @@ import os
 import json
 from datetime import datetime, timezone, timedelta
 from typing import List, Dict, Optional, Tuple
-from models import Table, MenuCategory, MenuItem, Order, OrderItem, Receipt, SystemConfig
+try:
+    from .models import Table, MenuCategory, MenuItem, Order, OrderItem, Receipt, SystemConfig
+except ImportError:
+    from models import Table, MenuCategory, MenuItem, Order, OrderItem, Receipt, SystemConfig
 import pytz
 
 # PostgreSQL support for production

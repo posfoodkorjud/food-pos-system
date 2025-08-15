@@ -15,11 +15,19 @@ from datetime import datetime
 import pytz
 from werkzeug.utils import secure_filename
 from PIL import Image
-from database import DatabaseManager
-from models import *
-from utils.qr_generator import QRGenerator
-from utils.promptpay import PromptPayGenerator
-from utils.google_sheets import GoogleSheetsManager
+try:
+    from .database import DatabaseManager
+    from .models import *
+    from .utils.qr_generator import QRGenerator
+    from .utils.promptpay import PromptPayGenerator
+    from .utils.google_sheets import GoogleSheetsManager
+except ImportError:
+    # Fallback for direct execution
+    from database import DatabaseManager
+    from models import *
+    from utils.qr_generator import QRGenerator
+    from utils.promptpay import PromptPayGenerator
+    from utils.google_sheets import GoogleSheetsManager
 
 # เพิ่ม logging สำหรับ debug
 import logging

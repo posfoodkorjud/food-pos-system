@@ -18,15 +18,22 @@ from pathlib import Path
 # Add the project root to Python path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / 'backend'))
 
 try:
+    # Try importing from backend directory first
     from backend.database import DatabaseManager
     from backend.app import app
-except ImportError as e:
-    print(f"Error importing modules: {e}")
-    print("Please make sure all dependencies are installed.")
-    print("Run: pip install -r requirements.txt")
-    sys.exit(1)
+except ImportError:
+    try:
+        # If that fails, try importing directly (for production)
+        from database import DatabaseManager
+        from app import app
+    except ImportError as e:
+        print(f"Error importing modules: {e}")
+        print("Please make sure all dependencies are installed.")
+        print("Run: pip install -r requirements.txt")
+        sys.exit(1)
 
 def initialize_database():
     """
