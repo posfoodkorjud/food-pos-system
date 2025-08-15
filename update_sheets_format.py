@@ -9,7 +9,6 @@ from google.oauth2.service_account import Credentials
 import json
 import sqlite3
 from datetime import datetime
-import pandas as pd
 
 def load_config():
     """โหลดการตั้งค่า Google Sheets"""
@@ -70,10 +69,13 @@ def get_database_orders():
         ORDER BY o.created_at DESC, o.order_id DESC
         """
         
-        df = pd.read_sql_query(query, conn)
+        cursor = conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        columns = [description[0] for description in cursor.description]
         conn.close()
         
-        return df
+        return rows, columns
     except Exception as e:
         print(f"❌ ดึงข้อมูลจากฐานข้อมูลไม่สำเร็จ: {e}")
         return None
@@ -108,8 +110,13 @@ def update_sheets_format():
         return False
     
     # ดึงข้อมูลจากฐานข้อมูล
-    df = get_database_orders()
-    if df is None or df.empty:
+    result = get_database_orders()
+    if result is None:
+        print("❌ ไม่มีข้อมูลออเดอร์ในฐานข้อมูล")
+        return False
+    
+    rows, columns = result
+    if not rows:
         print("❌ ไม่มีข้อมูลออเดอร์ในฐานข้อมูล")
         return False
     
@@ -139,17 +146,20 @@ def update_sheets_format():
         # เตรียมข้อมูลสำหรับอัพเดท
         rows_to_add = []
         
-        for _, row in df.iterrows():
+        # สร้าง mapping ของ column index
+        col_map = {col: idx for idx, col in enumerate(columns)}
+        
+        for row in rows:
             formatted_row = [
-                str(row['order_id']),
-                format_datetime(row['created_at']),
-                str(row['item_name']) if pd.notna(row['item_name']) else '',
-                int(row['quantity']) if pd.notna(row['quantity']) else 0,
-                float(row['unit_price']) if pd.notna(row['unit_price']) else 0.0,
-                float(row['total_price']) if pd.notna(row['total_price']) else 0.0,
-                str(row['customer_request']) if pd.notna(row['customer_request']) else '-',
-                str(row['notes']) if pd.notna(row['notes']) else '-',
-                format_status(row['status'])
+                str(row[col_map['order_id']]),
+                format_datetime(row[col_map['created_at']]),
+                str(row[col_map['item_name']]) if row[col_map['item_name']] else '',
+                int(row[col_map['quantity']]) if row[col_map['quantity']] else 0,
+                float(row[col_map['unit_price']]) if row[col_map['unit_price']] else 0.0,
+                float(row[col_map['total_price']]) if row[col_map['total_price']] else 0.0,
+                str(row[col_map['customer_request']]) if row[col_map['customer_request']] else '-',
+                str(row[col_map['notes']]) if row[col_map['notes']] else '-',
+                format_status(row[col_map['status']])
             ]
             rows_to_add.append(formatted_row)
         

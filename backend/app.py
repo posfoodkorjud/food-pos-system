@@ -2970,8 +2970,9 @@ def export_order_history():
     """ส่งออกประวัติคำสั่งซื้อเป็นไฟล์ Excel"""
     try:
         import io
-        import pandas as pd
         from datetime import datetime
+        from openpyxl import Workbook
+        from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
         
         table_id = request.args.get('table_id')
         start_date = request.args.get('start_date')
@@ -3014,9 +3015,9 @@ def export_order_history():
         cursor.execute(query, params)
         orders_data = cursor.fetchall()
         
-        # แปลงข้อมูลเป็น DataFrame
-        columns = [description[0] for description in cursor.description]
-        df_orders = pd.DataFrame(orders_data, columns=columns)
+        # เก็บข้อมูลและ columns สำหรับใช้งาน
+        orders_columns = [description[0] for description in cursor.description]
+        orders_rows = orders_data
         
         # ดึงข้อมูลรายการอาหารแยกต่างหาก
         items_query = """
@@ -3050,38 +3051,59 @@ def export_order_history():
         cursor.execute(items_query, params)
         items_data = cursor.fetchall()
         
-        columns_items = [description[0] for description in cursor.description]
-        df_items = pd.DataFrame(items_data, columns=columns_items)
+        items_columns = [description[0] for description in cursor.description]
+        items_rows = items_data
         
         conn.close()
         
         # สร้างไฟล์ Excel พร้อมการจัดรูปแบบ
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            # เขียนข้อมูลออเดอร์
-            df_orders.to_excel(writer, sheet_name='ออเดอร์', index=False, startrow=1)
-            
-            # เขียนข้อมูลรายการอาหาร
-            df_items.to_excel(writer, sheet_name='รายการอาหาร', index=False, startrow=1)
-            
-            # จัดรูปแบบชีต ออเดอร์
-            ws_orders = writer.sheets['ออเดอร์']
-            
-            # จัดรูปแบบ header ของตาราง
-            from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
-            
-            # เพิ่มหัวข้อหลัก
-            ws_orders['A1'] = 'รายงานประวัติการสั่งอาหาร'
-            ws_orders['A1'].font = Font(size=16, bold=True)
-            ws_orders.merge_cells('A1:G1')
+        wb = Workbook()
+        
+        # สร้างชีตออเดอร์
+        ws_orders = wb.active
+        ws_orders.title = 'ออเดอร์'
+        
+        # สร้างชีตรายการอาหาร
+        ws_items = wb.create_sheet('รายการอาหาร')
+        
+        # เขียนข้อมูลออเดอร์
+        # เพิ่มหัวข้อหลัก
+        ws_orders['A1'] = 'รายงานประวัติการสั่งอาหาร'
+        ws_orders['A1'].font = Font(size=16, bold=True)
+        ws_orders.merge_cells('A1:G1')
+        
+        # เขียน header ของตาราง
+        for col_idx, column_name in enumerate(orders_columns, 1):
+            ws_orders.cell(row=2, column=col_idx, value=column_name)
+        
+        # เขียนข้อมูลออเดอร์
+        for row_idx, row_data in enumerate(orders_rows, 3):
+            for col_idx, value in enumerate(row_data, 1):
+                ws_orders.cell(row=row_idx, column=col_idx, value=value)
+        
+        # เขียนข้อมูลรายการอาหาร
+        ws_items['A1'] = 'รายละเอียดรายการอาหาร'
+        ws_items['A1'].font = Font(size=16, bold=True)
+        ws_items.merge_cells('A1:G1')
+        
+        # เขียน header ของตารางรายการอาหาร
+        for col_idx, column_name in enumerate(items_columns, 1):
+            ws_items.cell(row=2, column=col_idx, value=column_name)
+        
+        # เขียนข้อมูลรายการอาหาร
+        for row_idx, row_data in enumerate(items_rows, 3):
+            for col_idx, value in enumerate(row_data, 1):
+                ws_items.cell(row=row_idx, column=col_idx, value=value)
+        
+        # จัดรูปแบบ header ของตาราง
             
             # คำนวณสรุปยอด
-            total_orders = len(df_orders)
-            total_amount = df_orders['ยอดรวม (บาท)'].sum() if not df_orders.empty else 0
-            avg_amount = df_orders['ยอดรวม (บาท)'].mean() if not df_orders.empty else 0
+            total_orders = len(orders_rows)
+            total_amount = sum(row[6] for row in orders_rows) if orders_rows else 0  # คอลัมน์ยอดรวม
+            avg_amount = total_amount / total_orders if total_orders > 0 else 0
             
             # เพิ่มสรุปยอดในชีตออเดอร์
-            summary_row = len(df_orders) + 4
+            summary_row = len(orders_rows) + 4
             ws_orders[f'A{summary_row}'] = 'สรุปยอด'
             ws_orders[f'A{summary_row}'].font = Font(bold=True, size=14)
             ws_orders[f'A{summary_row + 1}'] = f'จำนวนออเดอร์ทั้งหมด: {total_orders} ออเดอร์'
@@ -3099,7 +3121,7 @@ def export_order_history():
             )
             
             # จัดรูปแบบ header ชีตออเดอร์
-            for col in range(1, len(df_orders.columns) + 1):
+            for col in range(1, len(orders_columns) + 1):
                 cell = ws_orders.cell(row=2, column=col)
                 cell.fill = header_fill
                 cell.font = header_font
@@ -3107,8 +3129,8 @@ def export_order_history():
                 cell.border = thin_border
             
             # จัดรูปแบบข้อมูลในตาราง
-            for row in range(3, len(df_orders) + 3):
-                for col in range(1, len(df_orders.columns) + 1):
+            for row in range(3, len(orders_rows) + 3):
+                for col in range(1, len(orders_columns) + 1):
                     cell = ws_orders.cell(row=row, column=col)
                     cell.border = thin_border
                     if col in [7]:  # คอลัมน์ยอดรวม
@@ -3120,16 +3142,8 @@ def export_order_history():
             for i, width in enumerate(column_widths):
                 ws_orders.column_dimensions[column_letters[i]].width = width
             
-            # จัดรูปแบบชีต รายการอาหาร
-            ws_items = writer.sheets['รายการอาหาร']
-            
-            # เพิ่มหัวข้อหลัก
-            ws_items['A1'] = 'รายละเอียดรายการอาหาร'
-            ws_items['A1'].font = Font(size=16, bold=True)
-            ws_items.merge_cells('A1:G1')
-            
             # จัดรูปแบบ header ชีตรายการอาหาร
-            for col in range(1, len(df_items.columns) + 1):
+            for col in range(1, len(items_columns) + 1):
                 cell = ws_items.cell(row=2, column=col)
                 cell.fill = header_fill
                 cell.font = header_font
@@ -3137,8 +3151,8 @@ def export_order_history():
                 cell.border = thin_border
             
             # จัดรูปแบบข้อมูลในตาราง
-            for row in range(3, len(df_items) + 3):
-                for col in range(1, len(df_items.columns) + 1):
+            for row in range(3, len(items_rows) + 3):
+                for col in range(1, len(items_columns) + 1):
                     cell = ws_items.cell(row=row, column=col)
                     cell.border = thin_border
                     if col in [4, 5]:  # คอลัมน์ราคา
@@ -3152,16 +3166,19 @@ def export_order_history():
                 ws_items.column_dimensions[column_letters[i]].width = width
             
             # เพิ่มสรุปยอดในชีตรายการอาหาร
-            if not df_items.empty:
-                total_items = df_items['จำนวน'].sum()
-                total_item_amount = df_items['ราคารวม'].sum()
+            if items_rows:
+                total_items = sum(row[2] for row in items_rows)  # คอลัมน์จำนวน
+                total_item_amount = sum(row[4] for row in items_rows)  # คอลัมน์ราคารวม
                 
-                item_summary_row = len(df_items) + 4
+                item_summary_row = len(items_rows) + 4
                 ws_items[f'A{item_summary_row}'] = 'สรุปยอดรายการอาหาร'
                 ws_items[f'A{item_summary_row}'].font = Font(bold=True, size=14)
                 ws_items[f'A{item_summary_row + 1}'] = f'จำนวนรายการทั้งหมด: {total_items} รายการ'
                 ws_items[f'A{item_summary_row + 2}'] = f'ยอดขายรวม: {total_item_amount:,.2f} บาท'
         
+        # บันทึกไฟล์ Excel
+        output = io.BytesIO()
+        wb.save(output)
         output.seek(0)
         
         # สร้างชื่อไฟล์
